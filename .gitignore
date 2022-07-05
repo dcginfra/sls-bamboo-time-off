@@ -1,0 +1,11 @@
+# Serverless directories
+.serverless
+
+# rust output binary directory
+/target
+
+# serverless deployment package directory
+/package
+
+# deployment-specific configurations
+config.*.yaml

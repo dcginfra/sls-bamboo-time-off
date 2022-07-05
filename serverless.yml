@@ -1,0 +1,82 @@
+service: bamboo-time-off-alerts
+frameworkVersion: '3'
+
+custom:
+  aws_region: ${file(config.${self:provider.stage}.yaml):aws_region}
+  bamboo_api_key: ${file(config.${self:provider.stage}.yaml):bamboo_api_key}
+  bamboo_subdomain: ${file(config.${self:provider.stage}.yaml):bamboo_subdomain}
+  slack_alert_cap: ${file(config.${self:provider.stage}.yaml):slack_alert_cap}
+  slack_notify_enabled: ${file(config.${self:provider.stage}.yaml):slack_notify_enabled}
+  slack_webhook_url: ${file(config.${self:provider.stage}.yaml):slack_webhook_url}
+  table_name: ${file(config.${self:provider.stage}.yaml):table_name}
+
+provider:
+  name: aws
+  runtime: provided.al2
+  architecture: arm64
+
+  # you can overwrite defaults here
+  stage: dev
+  region: ${file(config.${self:provider.stage}.yaml):aws_region}
+  memorySize: 256
+  timeout: 20
+  stackTags:
+    App: "BambooHRTimeOffAlerts"
+    Name: "BambooHRTimeOffAlerts"
+
+  tags:
+    Name: "BambooHRTimeOffAlerts"
+
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action:
+            - "dynamodb:PutItem"
+            - "dynamodb:BatchWriteItem"
+            # - "dynamodb:UpdateItem"
+            # - "dynamodb:DeleteItem"
+          Resource:
+            - "Fn::GetAtt": [ ItemsTable, Arn ]
+      managedPolicies:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+functions:
+
+  # set up the fetch function
+  fetch:
+    handler: bootstrap
+    events:
+      - schedule:
+          rate: rate(30 minutes)
+          enabled: true
+    tags:
+      Name: "BambooHR Time Off Requests Fetch Lambda"
+    package:
+      individually: true  # required for bootstrap
+      # Explicitly set the package artifact to deploy (overrides native packaging behavior)
+      artifact: ./package/fetch.zip
+    environment:
+      BAMBOO_API_KEY: ${self:custom.bamboo_api_key}
+      BAMBOO_SUBDOMAIN: ${self:custom.bamboo_subdomain}
+      TABLE_NAME: ${self:custom.table_name}
+
+  alert:
+   handler: bootstrap
+   events:
+     - stream:
+         type: dynamodb
+         arn:
+           Fn::GetAtt: [ItemsTable, StreamArn]
+   package:
+     individually: true  # required for bootstrap
+     # Explicitly set the package artifact to deploy (overrides native packaging behavior)
+     artifact: ./package/alert.zip
+   environment:
+     SLACK_WEBHOOK_URL: ${self:custom.slack_webhook_url}
+     SLACK_NOTIFY_ENABLED: ${self:custom.slack_notify_enabled}
+     SLACK_ALERT_CAP: ${self:custom.slack_alert_cap}
+
+resources:
+  - ${file(resources/dynamodb-table.yaml)}

@@ -1,0 +1,27 @@
+---
+
+Resources:
+  ItemsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ${self:custom.table_name}
+      AttributeDefinitions:
+        - AttributeName: "id"
+          AttributeType: "N"
+        - AttributeName: "created_date"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "id"
+          KeyType: "HASH"
+        - AttributeName: "created_date"
+          KeyType: "RANGE"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 6
+        WriteCapacityUnits: 6
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+Outputs:
+  ItemsTableStreamArn:
+    Description: "${self:custom.table_name} Table Stream ARN"
+    Value: !GetAtt ItemsTable.StreamArn

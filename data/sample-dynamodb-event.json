@@ -1,0 +1,43 @@
+{
+  "Records": [
+    {
+      "eventID": "c4ca4238a0b923820dcc509a6f75849b",
+      "eventName": "INSERT",
+      "eventVersion": "1.1",
+      "eventSource": "aws:dynamodb",
+      "awsRegion": "us-west-2",
+      "dynamodb": {
+        "Keys": {
+          "id": {
+            "N": "1800"
+          },
+          "created_date": {
+            "S": "2022-01-01"
+          }
+        },
+        "NewImage": {
+          "id": {
+            "N": "1800"
+          },
+          "created_date": {
+            "S": "2022-01-01"
+          },
+          "name": {
+            "S": "Bruce Wayne"
+          },
+          "start_date": {
+            "S": "2023-01-01"
+          },
+          "end_date": {
+            "S": "2023-12-30"
+          }
+        },
+        "ApproximateCreationDateTime": 1428537600,
+        "SequenceNumber": "4421584500000000017450439091",
+        "SizeBytes": 26,
+        "StreamViewType": "NEW_AND_OLD_IMAGES"
+      },
+      "eventSourceARN": "arn:aws:dynamodb:us-west-2:123456789012:table/ExampleTableWithStream/stream/2015-06-27T00:48:05.899"
+    }
+  ]
+}
